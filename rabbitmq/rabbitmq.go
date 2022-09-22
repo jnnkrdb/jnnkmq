@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"time"
 
-	"github.com/jnnkrdb/jlog"
+	"github.com/jnnkrdb/corerdb/prtcl"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -43,22 +43,22 @@ type RabbitMQ struct {
 //   - `path` : string > path to the jsonfile, which contains the settings
 func LoadRabbitMQ(path string) (RabbitMQ, error) {
 
-	jlog.Log.Println("loading rabbitmq-auth configuration from", path)
+	prtcl.Log.Println("loading rabbitmq-auth configuration from", path)
 
 	var rmq = RabbitMQ{}
 
-	if jsonf, err := ioutil.ReadFile(path); err == nil {
+	if jsonf, err := os.ReadFile(path); err == nil {
 
 		if err := json.Unmarshal(jsonf, &rmq); err != nil {
 
-			jlog.PrintObject(jsonf, rmq, err)
+			prtcl.PrintObject(jsonf, rmq, err)
 
 			return rmq, err
 		}
 
 	} else {
 
-		jlog.PrintObject(jsonf, rmq, err)
+		prtcl.PrintObject(jsonf, rmq, err)
 
 		return rmq, err
 	}
@@ -83,11 +83,11 @@ func (rmq RabbitMQ) UnencodedPassword() string {
 // connect to the rmq-endpoint
 func (rmq *RabbitMQ) Connect() error {
 
-	jlog.Log.Println("connecting to rabbitmq-instance:", rmq.Address+":"+rmq.Port)
+	prtcl.Log.Println("connecting to rabbitmq-instance:", rmq.Address+":"+rmq.Port)
 
 	if rmqserver, err := amqp.Dial("amqp://" + rmq.Username + ":" + rmq.UnencodedPassword() + "@" + rmq.Address + ":" + rmq.Port + "/"); err != nil {
 
-		jlog.PrintObject(rmq, rmqserver, err)
+		prtcl.PrintObject(rmq, rmqserver, err)
 
 		return err
 
@@ -97,7 +97,7 @@ func (rmq *RabbitMQ) Connect() error {
 
 		if ch, err := rmq.endpoint.Channel(); err != nil {
 
-			jlog.PrintObject(rmq, rmqserver, ch, err)
+			prtcl.PrintObject(rmq, rmqserver, ch, err)
 
 			return err
 
@@ -125,12 +125,12 @@ func (rmq RabbitMQ) Channel() *amqp.Channel {
 // disconnect from the rmq instance
 func (rmq *RabbitMQ) Disconnect() error {
 
-	jlog.Log.Println("disconnecting from rabbitmq-instance:", rmq.Address+":"+rmq.Port)
+	prtcl.Log.Println("disconnecting from rabbitmq-instance:", rmq.Address+":"+rmq.Port)
 
 	// first close current channel
 	if err := rmq.channel.Close(); err != nil {
 
-		jlog.PrintObject(rmq, err)
+		prtcl.PrintObject(rmq, err)
 
 		return err
 	}
@@ -138,7 +138,7 @@ func (rmq *RabbitMQ) Disconnect() error {
 	// close the current connection
 	if err := rmq.endpoint.Close(); err != nil {
 
-		jlog.PrintObject(rmq, err)
+		prtcl.PrintObject(rmq, err)
 
 		return err
 	}
@@ -164,9 +164,9 @@ func (rmq *RabbitMQ) InitQueue(qc QueueDefinition) error {
 		nil,
 	); err != nil {
 
-		jlog.Log.Println("a problem occured while creating a queue for the current channel")
+		prtcl.Log.Println("a problem occured while creating a queue for the current channel")
 
-		jlog.PrintObject(rmq, qc, queue, err)
+		prtcl.PrintObject(rmq, qc, queue, err)
 
 		return err
 
@@ -204,9 +204,9 @@ func (rmq *RabbitMQ) Send(message string) error {
 		publishing,
 	); err != nil {
 
-		jlog.Log.Println("a problem occured while sending a msg to rabbitmq")
+		prtcl.Log.Println("a problem occured while sending a msg to rabbitmq")
 
-		jlog.PrintObject(rmq, ctx, cancel, publishing, err)
+		prtcl.PrintObject(rmq, ctx, cancel, publishing, err)
 
 		return err
 	}
@@ -233,7 +233,7 @@ func (rmq *RabbitMQ) Receive(cstring chan string) error {
 		nil,
 	); err != nil {
 
-		jlog.PrintObject(rmq, cstring, msgs, err)
+		prtcl.PrintObject(rmq, cstring, msgs, err)
 
 		return err
 
@@ -243,7 +243,7 @@ func (rmq *RabbitMQ) Receive(cstring chan string) error {
 
 			for d := range msgs {
 
-				jlog.PrintObject(d.Body)
+				prtcl.PrintObject(d.Body)
 
 				cstring <- string(d.Body)
 			}

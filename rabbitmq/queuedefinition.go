@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/jnnkrdb/jlog"
+	"github.com/jnnkrdb/corerdb/prtcl"
 )
 
 // queue definition for the message queue
@@ -32,18 +32,18 @@ type QueueDefinition struct {
 //   - `path` : string > path to the jsonfile, which contains the settings
 func LoadQueueDefintion(path string) (queue QueueDefinition, err error) {
 
-	jlog.Log.Println("loading rabbitmq-auth configuration from", path)
+	prtcl.Log.Println("loading rabbitmq-auth configuration from", path)
 
 	if jsonf, err := os.ReadFile(path); err == nil {
 
 		if err = json.Unmarshal(jsonf, &queue); err != nil {
 
-			jlog.PrintObject(jsonf, queue, err)
+			prtcl.PrintObject(jsonf, queue, err)
 		}
 
 	} else {
 
-		jlog.PrintObject(jsonf, queue, err)
+		prtcl.PrintObject(jsonf, queue, err)
 	}
 
 	return
