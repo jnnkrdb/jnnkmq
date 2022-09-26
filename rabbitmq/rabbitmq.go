@@ -243,7 +243,8 @@ func (rmq *RabbitMQ) Receive(cstring chan string) error {
 
 			for d := range msgs {
 
-				prtcl.PrintObject(d.Body)
+				// only return the msg, don't print it to prtcl.Log
+				//	prtcl.PrintObject(d.Body)
 
 				cstring <- string(d.Body)
 			}
